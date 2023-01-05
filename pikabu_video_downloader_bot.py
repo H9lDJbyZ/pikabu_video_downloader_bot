@@ -106,27 +106,32 @@ async def update_status():
         if status_id == 3:
             set_status(process_id, 4)
             filename = f'./files/{process_id}.mp4'
-            print(f'start upload to channel {filename}')
-            cv2video = cv2.VideoCapture(filename)
-            height = cv2video.get(cv2.CAP_PROP_FRAME_HEIGHT)
-            width  = cv2video.get(cv2.CAP_PROP_FRAME_WIDTH)
-            ch_message = await bot.send_video(
-                chat_id=CH_ID,
-                # chat_id=from_id,
-                video=open(filename, 'rb'),
-                caption=link_page,
-                height=height,
-                width=width
-            )
-            delete_files(process_id)
-            ch_id = ch_message.message_id
-            print(f'end upload {ch_id}')
-            cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
-            cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
-            cx.commit()
-            cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
-            file_id = cu.fetchone()[0]
-            await send_from_channel(file_id, from_id)
+            filesize = os.stat(filename).st_size / (1024 * 1024)
+            if filesize >= 50:
+                set_status(process_id, 5)
+            else:
+                print(f'start upload to channel {filename}')
+                cv2video = cv2.VideoCapture(filename)
+                height = cv2video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                width  = cv2video.get(cv2.CAP_PROP_FRAME_WIDTH)
+                
+                ch_message = await bot.send_video(
+                    chat_id=CH_ID,
+                    # chat_id=from_id,
+                    video=open(filename, 'rb'),
+                    caption=link_page,
+                    height=height,
+                    width=width
+                )
+                delete_files(process_id)
+                ch_id = ch_message.message_id
+                print(f'end upload {ch_id}')
+                cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
+                cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
+                cx.commit()
+                cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
+                file_id = cu.fetchone()[0]
+                await send_from_channel(file_id, from_id)
     cx.close()
 
 
