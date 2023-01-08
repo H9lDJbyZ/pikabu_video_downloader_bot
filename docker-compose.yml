@@ -13,6 +13,7 @@ services:
       dockerfile: bot.Dockerfile
       tags:
         - "bot:latest"
+    restart: always
   downloader:
     image: downloader:latest
     env_file:
@@ -25,4 +26,4 @@ services:
       dockerfile: downloader.Dockerfile
       tags:
         - "downloader:latest"
-
+    restart: always
