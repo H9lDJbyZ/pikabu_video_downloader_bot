@@ -2,7 +2,7 @@ import asyncio
 import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.utils.exceptions import MessageNotModified
+from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 import sqlite3
 import aioschedule
 from module.database import set_status
@@ -103,6 +103,8 @@ async def update_status():
             )
         except MessageNotModified:
             pass
+        except MessageToEditNotFound:
+            set_status(process_id, 6)
         if status_id == 3:
             set_status(process_id, 4)
             filename = f'./files/{process_id}.mp4'

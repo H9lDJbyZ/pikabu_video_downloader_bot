@@ -61,5 +61,5 @@ def download():
 
 if __name__ == '__main__':
     while True:
-        sleep(5)
+        sleep(10)
         download()
