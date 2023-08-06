@@ -1,4 +1,4 @@
-aiogram==2.24
-aioschedule==0.5.2
-opencv-python-headless==4.7.0.68
-python-dotenv==0.21.0
+aiogram
+aioschedule
+opencv-python-headless
+python-dotenv
