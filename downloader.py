@@ -3,6 +3,11 @@ from time import sleep
 import sqlite3
 from module.database import set_status
 from module.env import env_db_filename
+from datetime import datetime
+
+
+def log(text, level = 'INFO'):
+    print(f'{datetime.now()} {level} {text}')
 
 
 def find_my(filename):
@@ -19,7 +24,7 @@ def find_my(filename):
 def save_page(link_page: str, id):
     html_file = f'./files/{id}.html'
     cmd = f'curl {link_page} -o {html_file}'
-    print(cmd)
+    log(cmd)
     os.system(cmd)
     return html_file
 
@@ -27,7 +32,7 @@ def save_page(link_page: str, id):
 def save_video(link_video: str, id):
     video_file = f'./files/{id}.mp4'
     cmd = f'curl {link_video} -o {video_file}'
-    print(cmd)
+    log(cmd)
     os.system(cmd)
     return video_file
 
@@ -37,22 +42,22 @@ def download():
     cu = cx.cursor()
     cu.execute('SELECT id, link_page FROM process WHERE status_id = 0;')
     rows = cu.fetchall()
-    print(f'В очереди: {len(rows)}')
+    log(f'В очереди: {len(rows)}')
     for row in rows:
-        sleep(5)
+        sleep(1)
         id, link_page = row
-        print(link_page)
-        print('Поиск')
+        log(link_page)
+        log('Поиск...')
         set_status(id, 1)
 
         tmp_file = save_page(link_page, id)
         video = find_my(tmp_file)
         
-        print('Скачивание')
+        log('Скачивание...')
         set_status(id, 2)
         save_video(video, id)
 
-        print('Готово')
+        log('Готово')
         set_status(id, 3)
     cx.close()
 
