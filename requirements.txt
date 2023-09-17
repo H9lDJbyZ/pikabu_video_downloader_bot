@@ -1,4 +1,4 @@
-aiogram
+aiogram==2.9.2
 aioschedule
 opencv-python-headless
 python-dotenv

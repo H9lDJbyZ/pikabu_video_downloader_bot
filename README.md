@@ -7,6 +7,9 @@ $ chmod 666 db
 $ chmod 666 files
 
 ## Запуск
- $ docker build . -t pikabu_bot:
+ $ docker build . -t pikabu_bot
  $ docker compose build
  $ docker compose up -d
+
+ ## Литература
+ https://mastergroosha.github.io/telegram-tutorial-2/

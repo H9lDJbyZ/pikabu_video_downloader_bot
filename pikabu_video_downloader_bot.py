@@ -1,13 +1,16 @@
 import asyncio
 import os
 import logging
+# import time
 from aiogram import Bot, Dispatcher, executor, types
+# from aiogram import Bot, Dispatcher, types
 from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 import sqlite3
-import aioschedule
+# import aioschedule
 from module.database import set_status
 from module.env import env_db_filename
 import cv2
+# import schedule
 
 
 bot = Bot(token=os.environ.get('BOT_TOKEN'))
@@ -56,7 +59,7 @@ async def cmd_test1(message: types.Message):
 
 @dp.message_handler(content_types=[types.ContentType.TEXT])
 async def any_text(message: types.Message):
-    from_id = message.from_id
+    from_id = message.from_user.id
     for entity in message.entities:
         if entity.type == 'url':
             url = message.text[entity.offset:entity.offset+entity.length]
@@ -137,11 +140,21 @@ async def update_status():
     cx.close()
 
 
+# async def scheduler():
+#     aioschedule.every(10).seconds.do(update_status)
+#     while True:
+#         await aioschedule.run_pending()
+#         await asyncio.sleep(1)
+#     # loop = asyncio.get_event_loop()
+#     # while True:
+#     #     loop.run_until_complete(aioschedule.run_pending())
+#     #     time.sleep(1)
+
+
 async def scheduler():
-    aioschedule.every(10).seconds.do(update_status)
     while True:
-        await aioschedule.run_pending()
-        await asyncio.sleep(1)
+        await update_status()
+        await asyncio.sleep(10)
 
 
 async def on_startup(_):

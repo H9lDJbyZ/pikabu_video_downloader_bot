@@ -1,7 +1,7 @@
-FROM python:3.10.8-slim
+FROM python:3.11.5-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-RUN apt-get update -y && apt-get upgrade -y && apt-get install sqlite3 curl -y
+RUN apt-get update && apt-get upgrade -y && apt-get install sqlite3 curl -y
 # RUN python -m pip install --upgrade pip
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
