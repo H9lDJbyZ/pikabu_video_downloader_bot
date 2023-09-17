@@ -1,16 +1,12 @@
 import asyncio
 import os
 import logging
-# import time
 from aiogram import Bot, Dispatcher, executor, types
-# from aiogram import Bot, Dispatcher, types
 from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 import sqlite3
-# import aioschedule
 from module.database import set_status
 from module.env import env_db_filename
 import cv2
-# import schedule
 
 
 bot = Bot(token=os.environ.get('BOT_TOKEN'))
