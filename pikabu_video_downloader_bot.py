@@ -6,14 +6,15 @@ from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 import sqlite3
 from module.database import get_queue_count, set_status, DB_TABLE_FILES, DB_TABLE_PROCESS, DB
 from module.log import log
+from module.env import env_ch_id, env_bot_token
 import cv2
 
 
-bot = Bot(token=os.environ.get('BOT_TOKEN'))
+bot = Bot(env_bot_token())
 dp = Dispatcher(bot)
 logging.basicConfig(level=logging.INFO)
 
-CH_ID = '-1001889930255'
+CH_ID = env_ch_id()
 
 
 def url_exist(url: str) -> bool | int:
@@ -32,7 +33,7 @@ def add_new_link(url: str, from_id: int, message_id: int) -> int:
     cu = cx.cursor()
     cu.execute(f'INSERT INTO {DB_TABLE_PROCESS} (link_page, from_id, message_id, status_id) VALUES (?,?,?,?);', (url, from_id, message_id, 0))
     cx.commit()
-    return get_queue_count()
+    # return get_queue_count()
 
 
 def delete_files(id):
@@ -58,8 +59,8 @@ async def any_text(message: types.Message):
             file_id = url_exist(url)
             if not file_id:
                 await bot_message.edit_text('Ранее не скачивалось')
-                count = add_new_link(url, from_id, message_id)
-                await bot_message.edit_text(f'Добавлено в очередь. В очереди - {count}')
+                add_new_link(url, from_id, message_id)
+                await bot_message.edit_text(f'Добавлено в очередь. В очереди - {get_queue_count()}')
             else:
                 await bot_message.edit_text('Ранее скачивалось')
                 await send_from_channel(file_id, from_id)
@@ -90,7 +91,7 @@ async def update_status():
         process_id, link_page, status_id, from_id, message_id = row
         try:
             await bot.edit_message_text(
-                text=f'{link_page}\nСтатус: {status_id}',
+                text=f'{link_page}\nСтатус: {status_id}\nОчередь: {get_queue_count()}',
                 chat_id=from_id,
                 message_id=message_id
             )
@@ -126,25 +127,15 @@ async def update_status():
                 cx.commit()
                 cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
                 file_id = cu.fetchone()[0]
+                await bot.delete_message(chat_id=from_id, message_id=message_id)
                 await send_from_channel(file_id, from_id)
     cx.close()
-
-
-# async def scheduler():
-#     aioschedule.every(10).seconds.do(update_status)
-#     while True:
-#         await aioschedule.run_pending()
-#         await asyncio.sleep(1)
-#     # loop = asyncio.get_event_loop()
-#     # while True:
-#     #     loop.run_until_complete(aioschedule.run_pending())
-#     #     time.sleep(1)
 
 
 async def scheduler():
     while True:
         await update_status()
-        await asyncio.sleep(10)
+        await asyncio.sleep(1)
 
 
 async def on_startup(_):
