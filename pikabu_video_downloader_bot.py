@@ -6,6 +6,7 @@ from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 import sqlite3
 from module.database import set_status
 from module.env import env_db_filename
+from module.log import log
 import cv2
 
 
@@ -111,7 +112,7 @@ async def update_status():
             if filesize >= 50:
                 set_status(process_id, 5)
             else:
-                print(f'start upload to channel {filename}')
+                log(f'start upload to channel {filename}')
                 cv2video = cv2.VideoCapture(filename)
                 height = cv2video.get(cv2.CAP_PROP_FRAME_HEIGHT)
                 width  = cv2video.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -126,7 +127,7 @@ async def update_status():
                 )
                 delete_files(process_id)
                 ch_id = ch_message.message_id
-                print(f'end upload {ch_id}')
+                log(f'end upload {ch_id}')
                 cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
                 cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
                 cx.commit()

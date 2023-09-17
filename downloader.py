@@ -3,11 +3,8 @@ from time import sleep
 import sqlite3
 from module.database import set_status
 from module.env import env_db_filename
-from datetime import datetime
+from module.log import log
 
-
-def log(text, level = 'INFO'):
-    print(f'{datetime.now()} {level} {text}')
 
 
 def find_my(filename):
