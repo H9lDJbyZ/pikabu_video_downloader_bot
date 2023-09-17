@@ -4,8 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
 import sqlite3
-from module.database import set_status
-from module.env import env_db_filename
+from module.database import get_queue_count, set_status, DB_TABLE_FILES, DB_TABLE_PROCESS, DB
 from module.log import log
 import cv2
 
@@ -14,10 +13,6 @@ bot = Bot(token=os.environ.get('BOT_TOKEN'))
 dp = Dispatcher(bot)
 logging.basicConfig(level=logging.INFO)
 
-
-DB = env_db_filename()
-DB_TABLE_PROCESS = 'process'
-DB_TABLE_FILES = 'files'
 CH_ID = '-1001889930255'
 
 
@@ -37,9 +32,7 @@ def add_new_link(url: str, from_id: int, message_id: int) -> int:
     cu = cx.cursor()
     cu.execute(f'INSERT INTO {DB_TABLE_PROCESS} (link_page, from_id, message_id, status_id) VALUES (?,?,?,?);', (url, from_id, message_id, 0))
     cx.commit()
-    count = cu.execute(f'SELECT COUNT(id) FROM {DB_TABLE_PROCESS};').fetchone()[0]
-    cx.close()
-    return count
+    return get_queue_count()
 
 
 def delete_files(id):
@@ -51,7 +44,7 @@ def delete_files(id):
 
 @dp.message_handler(commands="start")
 async def cmd_test1(message: types.Message):
-    await message.reply("Пришли ссылку на страницу Пикабу с видео")
+    await message.reply(f'Пришли ссылку на страницу Пикабу с видео\nОчередь: {get_queue_count()}')
 
 
 @dp.message_handler(content_types=[types.ContentType.TEXT])
