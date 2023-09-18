@@ -2,7 +2,7 @@ import asyncio
 import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound
+from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound
 import sqlite3
 from module.database import get_queue_count, set_status, DB_TABLE_FILES, DB_TABLE_PROCESS, DB
 from module.log import log
@@ -89,16 +89,19 @@ async def update_status():
     rows = cu.fetchall()
     for row in rows:
         process_id, link_page, status_id, from_id, message_id = row
-        try:
-            await bot.edit_message_text(
-                text=f'{link_page}\nСтатус: {status_id}\nОчередь: {get_queue_count()}',
-                chat_id=from_id,
-                message_id=message_id
-            )
-        except MessageNotModified:
-            pass
-        except MessageToEditNotFound:
-            set_status(process_id, 6)
+        if status_id < 5:
+            try:
+                await bot.edit_message_text(
+                    text=f'{link_page}\nСтатус: {status_id}\nОчередь: {get_queue_count()}',
+                    chat_id=from_id,
+                    message_id=message_id
+                )
+            except MessageNotModified:
+                pass
+            except (MessageToEditNotFound, MessageToDeleteNotFound) as error:
+                log(error, 'ERROR')
+                set_status(process_id, 6)
+                status_id = 6j
         if status_id == 3:
             try:
                 set_status(process_id, 4)

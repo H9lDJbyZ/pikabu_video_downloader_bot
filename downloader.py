@@ -8,6 +8,10 @@ from module.log import log
 
 
 def find_my(filename):
+    log(f'find_my - {filename}')
+    if not os.path.exists(filename):
+        log(f'{filename} not fount', 'WARN')
+        return False
     with open(filename, 'br') as f:
         page = str(f.read())
     ind_div = page.find('<div class="player"')
@@ -20,7 +24,7 @@ def find_my(filename):
 
 def save_page(link_page: str, id):
     html_file = f'./files/{id}.html'
-    cmd = f'curl {link_page} -o {html_file}'
+    cmd = f'curl -o {html_file} {link_page}'
     log(cmd)
     os.system(cmd)
     return html_file
@@ -28,7 +32,7 @@ def save_page(link_page: str, id):
 
 def save_video(link_video: str, id):
     video_file = f'./files/{id}.mp4'
-    cmd = f'curl {link_video} -o {video_file}'
+    cmd = f'curl -o {video_file} {link_video}'
     log(cmd)
     os.system(cmd)
     return video_file
@@ -39,7 +43,9 @@ def download():
     cu = cx.cursor()
     cu.execute('SELECT id, link_page FROM process WHERE status_id = 0;')
     rows = cu.fetchall()
-    log(f'В очереди: {len(rows)}')
+    c = len(rows)
+    if c > 0:
+        log(f'В очереди: {c}')
     for row in rows:
         sleep(1)
         id, link_page = row
@@ -49,6 +55,10 @@ def download():
 
         tmp_file = save_page(link_page, id)
         video = find_my(tmp_file)
+
+        if not video:
+            set_status(id, 7)
+            return
         
         log('Скачивание...')
         set_status(id, 2)

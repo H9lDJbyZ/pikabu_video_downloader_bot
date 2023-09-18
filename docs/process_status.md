@@ -4,5 +4,5 @@
 3 - скачано
 4 - заливается в тг
 5 - больше 50мб
-6 - MessageToEditNotFound
+6 - essageToEditNotFound or MessageNotModified or MessageToDeleteNotFound
 7 - FileNotFound
