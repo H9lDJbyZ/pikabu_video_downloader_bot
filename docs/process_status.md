@@ -5,3 +5,4 @@
 4 - заливается в тг
 5 - больше 50мб
 6 - MessageToEditNotFound
+7 - FileNotFound
