@@ -2,7 +2,7 @@ import asyncio
 import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound
+from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted
 import sqlite3
 from module.database import get_queue_count, set_status, DB_TABLE_FILES, DB_TABLE_PROCESS, DB
 from module.log import log
@@ -131,8 +131,11 @@ async def update_status():
                     cx.commit()
                     cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
                     file_id = cu.fetchone()[0]
-                    await bot.delete_message(chat_id=from_id, message_id=message_id)
-                    await send_from_channel(file_id, from_id)
+                    try:
+                        await bot.delete_message(chat_id=from_id, message_id=message_id)
+                        await send_from_channel(file_id, from_id)
+                    except (BotBlocked, MessageCantBeDeleted):
+                        pass
             except FileNotFoundError:
                 log(f'{filename} не найден', 'WARN')
                 set_status(process_id, 7)
