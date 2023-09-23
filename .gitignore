@@ -4,3 +4,4 @@
 db
 files
 *.pyc
+*.log
