@@ -15,11 +15,14 @@ def find_my(filename):
         return False
     with open(filename, 'br') as f:
         page = str(f.read())
-    ind_div = page.find('<div class="player"')
-    ind_attr = page.find('data-source=', ind_div)
-    ind_1q = page.find('"', ind_attr) + 1
-    ind_2q = page.find('"', ind_1q)
-    res = page[ind_1q:ind_2q]+'.mp4'
+    try:
+        ind_div = page.find('<div class="player"')
+        ind_attr = page.find('data-source=', ind_div)
+        ind_1q = page.find('"', ind_attr) + 1
+        ind_2q = page.find('"', ind_1q)
+        res = page[ind_1q:ind_2q]+'.mp4'
+    except:
+        return False
     return res
 
 
