@@ -1,4 +1,5 @@
 import os
+import subprocess
 from time import sleep
 import sqlite3
 from module.database import set_status
@@ -34,7 +35,10 @@ def save_video(link_video: str, id):
     video_file = f'./files/{id}.mp4'
     cmd = f'curl -o {video_file} {link_video}'
     log(cmd)
-    os.system(cmd)
+    # os.system(cmd)
+    # Выполнить команду с ожиданием завершения
+    process = subprocess.Popen(cmd, shell=True)
+    process.wait()  # Ожидание завершения выполнения команды
     return video_file
 
 
