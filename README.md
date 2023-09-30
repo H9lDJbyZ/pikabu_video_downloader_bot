@@ -13,3 +13,5 @@ $ chmod 666 files
 
  ## Литература
  https://mastergroosha.github.io/telegram-tutorial-2/
+
+ install pycurl: pip install --compile --global-option="--with-openssl" --no-cache-dir pycurl 
