@@ -2,7 +2,7 @@ import asyncio
 import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted
+from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted, UserDeactivated
 import sqlite3
 from module.database import get_queue_count, set_status, DB_TABLE_FILES, DB_TABLE_PROCESS, DB
 from module.log import log
@@ -111,10 +111,10 @@ async def update_status():
                 )
             except MessageNotModified:
                 pass
-            except (MessageToEditNotFound, MessageToDeleteNotFound) as error:
+            except (MessageToEditNotFound, MessageToDeleteNotFound, UserDeactivated) as error:
                 log(error, 'ERROR')
                 set_status(process_id, 6)
-                status_id = 6j
+                status_id = 6
         if status_id == 3:
             set_status(process_id, 4)
             filename = f'./files/{process_id}.mp4'
