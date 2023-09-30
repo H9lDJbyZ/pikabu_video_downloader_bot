@@ -48,12 +48,22 @@ async def cmd_test1(message: types.Message):
     await message.reply(f'Пришли ссылку на страницу Пикабу с видео\nОчередь: {get_queue_count()}')
 
 
+def is_pikabu(url: str) -> bool:
+    result = False
+    if url.startswith('https://pikabu.ru/story/'):
+        result = True
+    return result
+
+
 @dp.message_handler(content_types=[types.ContentType.TEXT])
 async def any_text(message: types.Message):
     from_id = message.from_user.id
     for entity in message.entities:
         if entity.type == 'url':
             url = message.text[entity.offset:entity.offset+entity.length]
+            if not is_pikabu(url):
+                await message.answer('Это ссылка не на пост Пикабу, а куда-то ещё...')
+                return
             bot_message = await message.answer(url)
             message_id = bot_message.message_id
             file_id = url_exist(url)
