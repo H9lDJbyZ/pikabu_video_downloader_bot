@@ -2,9 +2,10 @@ import os
 import subprocess
 from time import sleep
 import sqlite3
-from module.database import set_status
+from module.database import get_queue, set_status
 from module.env import env_db_filename
 from module.log import log
+import pycurl
 
 
 
@@ -26,30 +27,35 @@ def find_my(filename):
     return res
 
 
-def save_page(link_page: str, id):
-    html_file = f'./files/{id}.html'
-    cmd = f'curl -o {html_file} {link_page}'
-    log(cmd)
-    os.system(cmd)
-    return html_file
+def curl(out, link):
+    # cmd = f'curl -s -o {out} {link}'
+    # log(cmd)
+    # process = subprocess.Popen(cmd, shell=True)
+    # process.wait()
+    with open(out, 'wb') as f:
+        c = pycurl.Curl()
+        c.setopt(c.URL, link)
+        c.setopt(c.WRITEDATA, f)
+        c.perform()
+        c.close()
 
 
-def save_video(link_video: str, id):
-    video_file = f'./files/{id}.mp4'
-    cmd = f'curl -o {video_file} {link_video}'
-    log(cmd)
-    # os.system(cmd)
-    # Выполнить команду с ожиданием завершения
-    process = subprocess.Popen(cmd, shell=True)
-    process.wait()  # Ожидание завершения выполнения команды
-    return video_file
+# def save_page(link_page: str, id):
+#     html_file = f'./files/{id}.html'
+#     # cmd = f'curl -o {html_file} {link_page}'
+#     curl(html_file, link_page)
+#     return html_file
+
+
+# def save_video(link_video: str, id):
+#     video_file = f'./files/{id}.mp4'
+#     # cmd = f'curl -o {video_file} {link_video}'
+#     curl(video_file, link_video)
+#     return video_file
 
 
 def download():
-    cx = sqlite3.connect(env_db_filename())
-    cu = cx.cursor()
-    cu.execute('SELECT id, link_page FROM process WHERE status_id = 0;')
-    rows = cu.fetchall()
+    rows = get_queue()
     c = len(rows)
     if c > 0:
         log(f'В очереди: {c}')
@@ -57,25 +63,28 @@ def download():
         sleep(1)
         id, link_page = row
         log(link_page)
-        log('Поиск...')
         set_status(id, 1)
 
-        tmp_file = save_page(link_page, id)
-        video = find_my(tmp_file)
+        # save page
+        # tmp_file = save_page(link_page, id)
+        log('Скачиваю страницу')
+        html_file = f'./files/{id}.html'
+        curl(html_file, link_page)
 
+        log('Поиск ссылки на видео')
+        video = find_my(html_file)
         if not video:
             set_status(id, 7)
             return
         
-        log('Скачивание...')
+        log('Скачиваю видео')
         set_status(id, 2)
-        save_video(video, id)
+        # save_video(video, id)
+        video_file = f'./files/{id}.mp4'
+        curl(video_file, video)
 
         log('Готово')
         set_status(id, 3)
-    cx.close()
-
-
 
 
 if __name__ == '__main__':

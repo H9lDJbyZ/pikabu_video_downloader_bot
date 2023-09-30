@@ -21,3 +21,12 @@ def get_queue_count():
     count = cu.execute(f'SELECT COUNT(id) FROM {DB_TABLE_PROCESS};').fetchone()[0]
     cx.close()
     return count
+
+
+def get_queue():
+    cx = sqlite3.connect(DB)
+    cu = cx.cursor()
+    cu.execute(f'SELECT id, link_page FROM {DB_TABLE_PROCESS} WHERE status_id = 0;')
+    rows = cu.fetchall()
+    cx.close()
+    return rows

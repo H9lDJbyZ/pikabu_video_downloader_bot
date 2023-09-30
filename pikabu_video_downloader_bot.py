@@ -39,8 +39,10 @@ def add_new_link(url: str, from_id: int, message_id: int) -> int:
 def delete_files(id):
     fn_html = f'./files/{id}.html'
     fn_mp4 = f'./files/{id}.mp4'
-    os.remove(fn_html)
-    os.remove(fn_mp4)
+    if os.path.exists(fn_html):
+        os.remove(fn_html)
+    if os.path.exists(fn_mp4):        
+        os.remove(fn_mp4)
 
 
 @dp.message_handler(commands="start")
@@ -82,6 +84,7 @@ async def send_from_channel(file_id, from_id):
     cu = cx.cursor()
     cu.execute(f'SELECT message_id FROM {DB_TABLE_FILES} WHERE id = ?;', (file_id,))
     row = cu.fetchone()
+    cx.close()
     if row is None:
         return None
     message_id = row[0]
@@ -113,42 +116,43 @@ async def update_status():
                 set_status(process_id, 6)
                 status_id = 6j
         if status_id == 3:
-            try:
-                set_status(process_id, 4)
-                filename = f'./files/{process_id}.mp4'
-                filesize = os.stat(filename).st_size / (1024 * 1024)
-                if filesize >= 50:
-                    set_status(process_id, 5)
-                else:
-                    log(f'start upload to channel {filename}')
-                    cv2video = cv2.VideoCapture(filename)
-                    height = cv2video.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                    width  = cv2video.get(cv2.CAP_PROP_FRAME_WIDTH)
-                    
-                    ch_message = await bot.send_video(
-                        chat_id=CH_ID,
-                        # chat_id=from_id,
-                        video=open(filename, 'rb'),
-                        caption=link_page,
-                        height=height,
-                        width=width
-                    )
-                    delete_files(process_id)
-                    ch_id = ch_message.message_id
-                    log(f'end upload {ch_id}')
-                    cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
-                    cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
-                    cx.commit()
-                    cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
-                    file_id = cu.fetchone()[0]
-                    try:
-                        await bot.delete_message(chat_id=from_id, message_id=message_id)
-                        await send_from_channel(file_id, from_id)
-                    except (BotBlocked, MessageCantBeDeleted):
-                        pass
-            except FileNotFoundError:
+            set_status(process_id, 4)
+            filename = f'./files/{process_id}.mp4'
+            if not os.path.exists(filename):
                 log(f'{filename} не найден', 'WARN')
                 set_status(process_id, 7)
+                return
+            filesize = os.stat(filename).st_size / (1024 * 1024)
+            if filesize >= 50:
+                set_status(process_id, 5)
+            else:
+                log(f'Загружаю на канал {filename}')
+                cv2video = cv2.VideoCapture(filename)
+                height = cv2video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                width  = cv2video.get(cv2.CAP_PROP_FRAME_WIDTH)
+                # TODO получить продолжительность видео и передавать её в тг при загрузке
+                # dur = cv2video.get(cv2.CAP_PROP_)
+                
+                ch_message = await bot.send_video(
+                    chat_id=CH_ID,
+                    video=open(filename, 'rb'),
+                    caption=f'{link_page}', # TODO добавить ссылку на бота
+                    height=height,
+                    width=width
+                )
+                delete_files(process_id)
+                ch_id = ch_message.message_id
+                log(f'Загрузил {ch_id}')
+                cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
+                cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
+                cx.commit()
+                cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
+                file_id = cu.fetchone()[0]
+                try:
+                    await bot.delete_message(chat_id=from_id, message_id=message_id)
+                    await send_from_channel(file_id, from_id)
+                except (BotBlocked, MessageCantBeDeleted):
+                    pass
     cx.close()
 
 
