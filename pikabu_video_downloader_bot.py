@@ -18,21 +18,23 @@ CH_ID = env_ch_id()
 
 
 def url_exist(url: str) -> bool | int:
-    cx = sqlite3.connect(DB)
-    cu = cx.cursor()
-    cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (url,))
-    row = cu.fetchone()
-    cx.close()
+    # cx = sqlite3.connect(DB)
+    with sqlite3.connect(DB) as cx:
+        cu = cx.cursor()
+        cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (url,))
+        row = cu.fetchone()
+    # cx.close()
     if row is None:
         return False
     return row[0]
 
 
 def add_new_link(url: str, from_id: int, message_id: int) -> int:
-    cx = sqlite3.connect(DB)
-    cu = cx.cursor()
-    cu.execute(f'INSERT INTO {DB_TABLE_PROCESS} (link_page, from_id, message_id, status_id) VALUES (?,?,?,?);', (url, from_id, message_id, 0))
-    cx.commit()
+    # cx = sqlite3.connect(DB)
+    with sqlite3.connect(DB) as cx:
+        cu = cx.cursor()
+        cu.execute(f'INSERT INTO {DB_TABLE_PROCESS} (link_page, from_id, message_id, status_id) VALUES (?,?,?,?);', (url, from_id, message_id, 0))
+        cx.commit()
     # return get_queue_count()
 
 
@@ -80,11 +82,12 @@ async def any_text(message: types.Message):
 
 
 async def send_from_channel(file_id, from_id):
-    cx = sqlite3.connect(DB)
-    cu = cx.cursor()
-    cu.execute(f'SELECT message_id FROM {DB_TABLE_FILES} WHERE id = ?;', (file_id,))
-    row = cu.fetchone()
-    cx.close()
+    # cx = sqlite3.connect(DB)
+    with sqlite3.connect(DB) as cx:
+        cu = cx.cursor()
+        cu.execute(f'SELECT message_id FROM {DB_TABLE_FILES} WHERE id = ?;', (file_id,))
+        row = cu.fetchone()
+    # cx.close()
     if row is None:
         return None
     message_id = row[0]
@@ -96,10 +99,11 @@ async def send_from_channel(file_id, from_id):
 
 
 async def update_status():
-    cx = sqlite3.connect(DB)
-    cu = cx.cursor()
-    cu.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS};')
-    rows = cu.fetchall()
+    # cx = sqlite3.connect(DB)
+    with sqlite3.connect(DB) as cx:
+        cu = cx.cursor()
+        cu.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS};')
+        rows = cu.fetchall()
     for row in rows:
         process_id, link_page, status_id, from_id, message_id = row
         if status_id < 5:
@@ -143,17 +147,19 @@ async def update_status():
                 delete_files(process_id)
                 ch_id = ch_message.message_id
                 log(f'Загрузил {ch_id}')
-                cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
-                cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
-                cx.commit()
-                cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
-                file_id = cu.fetchone()[0]
+                with sqlite3.connect(DB) as cx:
+                    cu = cx.cursor()
+                    cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
+                    cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
+                    cx.commit()
+                    cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
+                    file_id = cu.fetchone()[0]
                 try:
                     await bot.delete_message(chat_id=from_id, message_id=message_id)
                     await send_from_channel(file_id, from_id)
                 except (BotBlocked, MessageCantBeDeleted):
                     pass
-    cx.close()
+    # cx.close()
 
 
 async def scheduler():
