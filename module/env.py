@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from os import environ
 
-load_dotenv()
+load_dotenv('.env')
 
 def env_db_filename():
     return environ.get('DATABASE_FILE')

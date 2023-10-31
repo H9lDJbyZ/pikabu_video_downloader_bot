@@ -1,12 +1,9 @@
+import asyncio
 import os
-import subprocess
 from time import sleep
-import sqlite3
-from module.database import get_queue, set_status
-from module.env import env_db_filename
+from module.async_database import get_queue, set_status
 from module.log import log
 import pycurl
-
 
 
 def find_my(filename):
@@ -28,10 +25,6 @@ def find_my(filename):
 
 
 def curl(out, link):
-    # cmd = f'curl -s -o {out} {link}'
-    # log(cmd)
-    # process = subprocess.Popen(cmd, shell=True)
-    # process.wait()
     with open(out, 'wb') as f:
         c = pycurl.Curl()
         c.setopt(c.URL, link)
@@ -40,22 +33,8 @@ def curl(out, link):
         c.close()
 
 
-# def save_page(link_page: str, id):
-#     html_file = f'./files/{id}.html'
-#     # cmd = f'curl -o {html_file} {link_page}'
-#     curl(html_file, link_page)
-#     return html_file
-
-
-# def save_video(link_video: str, id):
-#     video_file = f'./files/{id}.mp4'
-#     # cmd = f'curl -o {video_file} {link_video}'
-#     curl(video_file, link_video)
-#     return video_file
-
-
-def download():
-    rows = get_queue()
+async def download():
+    rows = await get_queue()
     c = len(rows)
     if c > 0:
         log(f'В очереди: {c}')
@@ -63,10 +42,8 @@ def download():
         sleep(1)
         id, link_page = row
         log(link_page)
-        set_status(id, 1)
+        await set_status(id, 1)
 
-        # save page
-        # tmp_file = save_page(link_page, id)
         log('Скачиваю страницу')
         html_file = f'./files/{id}.html'
         curl(html_file, link_page)
@@ -74,20 +51,21 @@ def download():
         log('Поиск ссылки на видео')
         video = find_my(html_file)
         if not video:
-            set_status(id, 7)
+            await set_status(id, 7)
             return
         
         log('Скачиваю видео')
-        set_status(id, 2)
-        # save_video(video, id)
+        await set_status(id, 2)
         video_file = f'./files/{id}.mp4'
         curl(video_file, video)
 
         log('Готово')
-        set_status(id, 3)
+        await set_status(id, 3)
 
+async def scheduler():
+    while True:
+        await download()
+        await asyncio.sleep(5)
 
 if __name__ == '__main__':
-    while True:
-        sleep(10)
-        download()
+    asyncio.run(scheduler())

@@ -3,8 +3,7 @@ import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted, UserDeactivated
-import sqlite3
-from module.database import get_queue_count, set_status, DB_TABLE_FILES, DB_TABLE_PROCESS, DB
+from module.async_database import get_all_in_process, get_file_id, get_queue_count, set_status, url_exist, add_new_link, get_channel_message_id
 from module.log import log
 from module.env import env_ch_id, env_bot_token
 import cv2
@@ -15,27 +14,6 @@ dp = Dispatcher(bot)
 logging.basicConfig(level=logging.INFO)
 
 CH_ID = env_ch_id()
-
-
-def url_exist(url: str) -> bool | int:
-    # cx = sqlite3.connect(DB)
-    with sqlite3.connect(DB) as cx:
-        cu = cx.cursor()
-        cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (url,))
-        row = cu.fetchone()
-    # cx.close()
-    if row is None:
-        return False
-    return row[0]
-
-
-def add_new_link(url: str, from_id: int, message_id: int) -> int:
-    # cx = sqlite3.connect(DB)
-    with sqlite3.connect(DB) as cx:
-        cu = cx.cursor()
-        cu.execute(f'INSERT INTO {DB_TABLE_PROCESS} (link_page, from_id, message_id, status_id) VALUES (?,?,?,?);', (url, from_id, message_id, 0))
-        cx.commit()
-    # return get_queue_count()
 
 
 def delete_files(id):
@@ -49,7 +27,7 @@ def delete_files(id):
 
 @dp.message_handler(commands="start")
 async def cmd_test1(message: types.Message):
-    await message.reply(f'Пришли ссылку на страницу Пикабу с видео\nОчередь: {get_queue_count()}')
+    await message.reply(f'Пришли ссылку на страницу Пикабу с видео\nОчередь: {await get_queue_count()}')
 
 
 def is_pikabu(url: str) -> bool:
@@ -70,11 +48,11 @@ async def any_text(message: types.Message):
                 return
             bot_message = await message.answer(url)
             message_id = bot_message.message_id
-            file_id = url_exist(url)
+            file_id = await url_exist(url)
             if not file_id:
                 await bot_message.edit_text('Ранее не скачивалось')
-                add_new_link(url, from_id, message_id)
-                await bot_message.edit_text(f'Добавлено в очередь. В очереди - {get_queue_count()}')
+                await add_new_link(url, from_id, message_id)
+                await bot_message.edit_text(f'Добавлено в очередь. В очереди - {await get_queue_count()}')
             else:
                 await bot_message.edit_text('Ранее скачивалось')
                 await send_from_channel(file_id, from_id)
@@ -82,15 +60,7 @@ async def any_text(message: types.Message):
 
 
 async def send_from_channel(file_id, from_id):
-    # cx = sqlite3.connect(DB)
-    with sqlite3.connect(DB) as cx:
-        cu = cx.cursor()
-        cu.execute(f'SELECT message_id FROM {DB_TABLE_FILES} WHERE id = ?;', (file_id,))
-        row = cu.fetchone()
-    # cx.close()
-    if row is None:
-        return None
-    message_id = row[0]
+    message_id = await get_channel_message_id(file_id)
     await bot.forward_message(
                 chat_id=from_id,
                 from_chat_id=CH_ID,
@@ -99,17 +69,13 @@ async def send_from_channel(file_id, from_id):
 
 
 async def update_status():
-    # cx = sqlite3.connect(DB)
-    with sqlite3.connect(DB) as cx:
-        cu = cx.cursor()
-        cu.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS};')
-        rows = cu.fetchall()
+    rows = await get_all_in_process()
     for row in rows:
         process_id, link_page, status_id, from_id, message_id = row
         if status_id < 5:
             try:
                 await bot.edit_message_text(
-                    text=f'{link_page}\nСтатус: {status_id}\nОчередь: {get_queue_count()}',
+                    text=f'{link_page}\nСтатус: {status_id}\nОчередь: {await get_queue_count()}',
                     chat_id=from_id,
                     message_id=message_id
                 )
@@ -117,18 +83,18 @@ async def update_status():
                 pass
             except (MessageToEditNotFound, MessageToDeleteNotFound, UserDeactivated) as error:
                 log(error, 'ERROR')
-                set_status(process_id, 6)
+                await set_status(process_id, 6)
                 status_id = 6
         if status_id == 3:
-            set_status(process_id, 4)
+            await set_status(process_id, 4)
             filename = f'./files/{process_id}.mp4'
             if not os.path.exists(filename):
                 log(f'{filename} не найден', 'WARN')
-                set_status(process_id, 7)
+                await set_status(process_id, 7)
                 return
             filesize = os.stat(filename).st_size / (1024 * 1024)
             if filesize >= 50:
-                set_status(process_id, 5)
+                await set_status(process_id, 5)
             else:
                 log(f'Загружаю на канал {filename}')
                 cv2video = cv2.VideoCapture(filename)
@@ -147,19 +113,12 @@ async def update_status():
                 delete_files(process_id)
                 ch_id = ch_message.message_id
                 log(f'Загрузил {ch_id}')
-                with sqlite3.connect(DB) as cx:
-                    cu = cx.cursor()
-                    cu.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
-                    cu.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
-                    cx.commit()
-                    cu.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,))
-                    file_id = cu.fetchone()[0]
+                file_id = await get_file_id(ch_id, link_page, process_id)
                 try:
                     await bot.delete_message(chat_id=from_id, message_id=message_id)
                     await send_from_channel(file_id, from_id)
                 except (BotBlocked, MessageCantBeDeleted):
                     pass
-    # cx.close()
 
 
 async def scheduler():

@@ -6,3 +6,4 @@ files
 *.pyc
 *.log
 tmp
+__pycache__
