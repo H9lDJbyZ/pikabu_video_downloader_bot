@@ -3,7 +3,7 @@ import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted, UserDeactivated
-from module.async_database import get_all_in_process, get_file_id, get_queue_count, set_status, url_exist, add_new_link, get_channel_message_id
+from module.async_database import get_all_in_process, get_file_id, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id
 from module.log import log
 from module.env import env_ch_id, env_bot_token
 import cv2
@@ -27,7 +27,7 @@ def delete_files(id):
 
 @dp.message_handler(commands="start")
 async def cmd_test1(message: types.Message):
-    await message.reply(f'Пришли ссылку на страницу Пикабу с видео\nОчередь: {await get_queue_count()}')
+    await message.reply(f'Пришли ссылку на страницу Пикабу с видео\nОчередь: {await get_queue_len()}')
 
 
 def is_pikabu(url: str) -> bool:
@@ -52,8 +52,8 @@ async def any_text(message: types.Message):
             file_id = await url_exist(url)
             if not file_id:
                 await bot_message.edit_text('Ранее не скачивалось')
-                await add_new_link(url, from_id, message_id)
-                await bot_message.edit_text(f'Добавлено в очередь. В очереди - {await get_queue_count()}')
+                await add_link_to_queue(url, from_id, message_id)
+                await bot_message.edit_text(f'Добавлено в очередь. В очереди - {await get_queue_len()}')
             else:
                 await bot_message.edit_text('Ранее скачивалось')
                 await send_from_channel(file_id, from_id)
@@ -76,7 +76,7 @@ async def update_status():
         if status_id < 5:
             try:
                 await bot.edit_message_text(
-                    text=f'{link_page}\nСтатус: {status_id}\nОчередь: {await get_queue_count()}',
+                    text=f'{link_page}\nСтатус: {status_id}\nОчередь: {await get_queue_len()}',
                     chat_id=from_id,
                     message_id=message_id
                 )

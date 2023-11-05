@@ -62,6 +62,7 @@ async def download():
         log('Готово')
         await set_status(id, 3)
 
+
 async def scheduler():
     while True:
         await download()
