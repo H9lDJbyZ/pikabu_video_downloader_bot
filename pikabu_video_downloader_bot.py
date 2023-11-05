@@ -31,10 +31,11 @@ async def cmd_test1(message: types.Message):
 
 
 def is_pikabu(url: str) -> bool:
-    result = False
-    if url.startswith('https://pikabu.ru/story/'):
-        result = True
-    return result
+    # result = False
+    # if url.startswith('https://pikabu.ru/story/'):
+    #     result = True
+    # return result
+    return url.startswith('https://pikabu.ru/story/')
 
 
 @dp.message_handler(content_types=[types.ContentType.TEXT])
