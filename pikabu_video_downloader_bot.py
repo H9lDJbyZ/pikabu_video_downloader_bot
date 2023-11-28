@@ -71,6 +71,7 @@ async def send_from_channel(file_id, from_id):
 async def update_status():
     rows = await get_all_in_process()
     for row in rows:
+        await asyncio.sleep(2)
         process_id, link_page, status_id, from_id, message_id = row
         if status_id < 5:
             try:
@@ -124,7 +125,7 @@ async def update_status():
 async def scheduler():
     while True:
         await update_status()
-        await asyncio.sleep(1)
+        await asyncio.sleep(10)
 
 
 async def on_startup(_):

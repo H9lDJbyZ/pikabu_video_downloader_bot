@@ -53,17 +53,11 @@ async def get_channel_message_id(file_id):
 
 
 async def get_all_in_process():
+    result = None
     async with aiosqlite.connect(DB) as cx:
         async with cx.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS};') as cu:
             result = await cu.fetchall()
-        return result
-    # cx = await aiosqlite.connect(DB) 
-    # cu = await cx.cursor()
-    # await cu.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS};')
-    # rows = await cu.fetchall()
-    # await cu.close()
-    # await cx.close()
-    # return rows
+    return result
     
 
 async def get_file_id(ch_id, link_page, process_id):
