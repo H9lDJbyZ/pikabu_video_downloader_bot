@@ -6,10 +6,10 @@ from module.log import log
 import pycurl
 
 
-def find_my(filename):
-    log(f'find_my - {filename}')
+def find_video_link(filename):
+    log(f'find_video_link - {filename}')
     if not os.path.exists(filename):
-        log(f'{filename} not fount', 'WARN')
+        log(f'{filename} not found', 'WARN')
         return False
     with open(filename, 'br') as f:
         page = str(f.read())
@@ -48,16 +48,16 @@ async def download():
         html_file = f'./files/{id}.html'
         curl(html_file, link_page)
 
-        log('Поиск ссылки на видео')
-        video = find_my(html_file)
-        if not video:
-            await set_status(id, 7)
-            return
+        # log('Поиск ссылки на видео')
+        # video = find_video_link(html_file)
+        # if not video:
+        #     await set_status(id, 7)
+        #     return
         
-        log('Скачиваю видео')
-        await set_status(id, 2)
-        video_file = f'./files/{id}.mp4'
-        curl(video_file, video)
+        # log('Скачиваю видео')
+        # await set_status(id, 2)
+        # video_file = f'./files/{id}.mp4'
+        # curl(video_file, video)
 
         log('Готово')
         await set_status(id, 3)
