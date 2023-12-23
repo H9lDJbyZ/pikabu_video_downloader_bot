@@ -3,7 +3,7 @@ import os
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted, UserDeactivated
-from module.async_database import get_all_in_process, get_file_id, get_queue_count, set_status, url_exist, add_new_link, get_channel_message_id
+from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_count, set_status, url_exist, add_new_link, get_channel_message_id
 from module.log import log
 from module.env import env_ch_id, env_bot_token
 import cv2
@@ -70,6 +70,7 @@ async def send_from_channel(file_id, from_id):
 
 async def update_status():
     rows = await get_all_in_process()
+    # log(rows)
     for row in rows:
         await asyncio.sleep(2)
         process_id, link_page, status_id, from_id, message_id = row
@@ -124,7 +125,10 @@ async def update_status():
 
 async def scheduler():
     while True:
-        await update_status()
+        try:
+            await update_status()
+        except Exception as e:
+            log(e, 'ERROR')
         await asyncio.sleep(10)
 
 

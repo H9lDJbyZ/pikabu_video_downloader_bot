@@ -58,6 +58,15 @@ async def get_all_in_process():
         async with cx.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS};') as cu:
             result = await cu.fetchall()
     return result
+
+
+async def get_one_in_process():
+    result = None
+    async with aiosqlite.connect(DB) as cx:
+        async with cx.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS} WHERE status_id < 5 LIMIT 1;') as cu:
+            result = list()
+            result.append(await cu.fetchone())
+    return result
     
 
 async def get_file_id(ch_id, link_page, process_id):
