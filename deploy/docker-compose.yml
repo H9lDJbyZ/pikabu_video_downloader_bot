@@ -7,10 +7,10 @@ services:
     env_file:
       - .env
     volumes:
-      - "./db:/app/db"
-      - "./files:/app/files"
+      - "../db:/app/db"
+      - "../files:/app/files"
     build: 
-      context: ..
+      context: .
       # dockerfile: bot.Dockerfile
       dockerfile_inline: |
         FROM pvd_bot_image:latest
@@ -24,10 +24,10 @@ services:
     env_file:
       - .env
     volumes:
-      - "./db:/app/db"
-      - "./files:/app/files"
+      - "../db:/app/db"
+      - "../files:/app/files"
     build: 
-      context: ..
+      context: .
       # dockerfile: downloader.Dockerfile
       dockerfile_inline: |
         FROM pvd_bot_image:latest
