@@ -7,7 +7,8 @@ $ chmod 666 db
 $ chmod 666 files
 
 ## Запуск
- $ docker build . -t pikabu_bot
+ --$ docker build . -t pikabu_bot
+ $ docker build -t pvd_bot -f ./deploy/Dockerfile .
  $ docker compose build
  $ docker compose up -d
 
