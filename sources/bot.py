@@ -97,19 +97,19 @@ async def update_status():
             #     await set_status(process_id, 6)
             #     status_id = 6
             except TelegramAPIError as e:
-                log(e, 'ERROR')                
+                await log(e, 'ERROR')                
         if status_id == 3:
             await set_status(process_id, 4)
             filename = f'./files/{process_id}.mp4'
             if not os.path.exists(filename):
-                log(f'{filename} не найден', 'WARN')
+                await log(f'{filename} не найден', 'WARN')
                 await set_status(process_id, 7)
                 return
             filesize = os.stat(filename).st_size / (1024 * 1024)
             if filesize >= 50:
                 await set_status(process_id, 5)
             else:
-                log(f'Загружаю на канал {filename}')
+                await log(f'Загружаю на канал {filename}')
                 cv2video = cv2.VideoCapture(filename)
                 height = cv2video.get(cv2.CAP_PROP_FRAME_HEIGHT)
                 width  = cv2video.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -125,18 +125,18 @@ async def update_status():
                 )
                 delete_files(process_id)
                 ch_id = ch_message.message_id
-                log(f'Загрузил {ch_id}')
+                await log(f'Загрузил {ch_id}')
                 file_id = await get_file_id(ch_id, link_page, process_id)
                 try:
                     await bot.delete_message(chat_id=from_id, message_id=message_id)
                     await send_from_channel(file_id, from_id)
                 # except (BotBlocked, MessageCantBeDeleted):
                 except TelegramAPIError as e:
-                    log(e, 'ERROR')
+                    await log(e, 'ERROR')
                     pass
 
 async def update_status_v2():
-    row = get_one_in_process()
+    row = await get_one_in_process()
     process_id, link_page, status_id, from_id, message_id = row
     
 
@@ -147,7 +147,7 @@ async def scheduler():
             # await update_status()
             await update_status_v2()
         except Exception as e:
-            log(e, 'ERROR')
+            await log(e, 'ERROR')
         await asyncio.sleep(2)
 
 
@@ -163,5 +163,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    # asyncio.create_task(scheduler())
-    # executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
