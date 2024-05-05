@@ -1,0 +1,37 @@
+# version: '3.9'
+
+services:
+  
+  bot:
+    image: pvd_bot:latest
+    env_file:
+      - .env
+    volumes:
+      - "./db:/app/db"
+      - "./files:/app/files"
+    build: 
+      context: .
+      # dockerfile: bot.Dockerfile
+      dockerfile_inline: |
+        FROM pvd_bot_image:latest
+        CMD ["python", "bot.py"]
+      # tags:
+      #   - "pvd_bot:latest"
+    restart: always
+  
+  downloader:
+    image: pvd_downloader:latest
+    env_file:
+      - .env
+    volumes:
+      - "./db:/app/db"
+      - "./files:/app/files"
+    build: 
+      context: .
+      # dockerfile: downloader.Dockerfile
+      dockerfile_inline: |
+        FROM pvd_bot_image:latest
+        CMD ["python", "downloader.py"]
+      # tags:
+      #   - "pvd_downloader:latest"
+    restart: always

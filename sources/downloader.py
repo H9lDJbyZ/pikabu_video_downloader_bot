@@ -6,10 +6,10 @@ from module.log import log
 import pycurl
 
 
-def find_my(filename):
-    log(f'find_my - {filename}')
+async def find_video_link(filename):
+    await log(f'find_video_link - {filename}')
     if not os.path.exists(filename):
-        log(f'{filename} not fount', 'WARN')
+        await log(f'{filename} not found', 'WARN')
         return False
     with open(filename, 'br') as f:
         page = str(f.read())
@@ -37,30 +37,31 @@ async def download():
     rows = await get_queue()
     c = len(rows)
     if c > 0:
-        log(f'В очереди: {c}')
+        await log(f'В очереди: {c}')
     for row in rows:
         sleep(1)
         id, link_page = row
-        log(link_page)
+        await log(link_page)
         await set_status(id, 1)
 
-        log('Скачиваю страницу')
+        await log('Скачиваю страницу')
         html_file = f'./files/{id}.html'
         curl(html_file, link_page)
 
-        log('Поиск ссылки на видео')
-        video = find_my(html_file)
+        await log('Поиск ссылки на видео')
+        video = await find_video_link(html_file)
         if not video:
             await set_status(id, 7)
             return
         
-        log('Скачиваю видео')
+        await log('Скачиваю видео')
         await set_status(id, 2)
         video_file = f'./files/{id}.mp4'
         curl(video_file, video)
 
-        log('Готово')
+        await log('Готово')
         await set_status(id, 3)
+
 
 async def scheduler():
     while True:

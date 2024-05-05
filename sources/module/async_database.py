@@ -9,15 +9,18 @@ DB = env_db_filename()
 
 async def set_status(id, status_id):
     async with aiosqlite.connect(DB) as cx:
-        await cx.execute('UPDATE process SET status_id = ? WHERE id = ?;', (status_id, id))
+        await cx.execute(f'UPDATE {DB_TABLE_PROCESS} SET status_id = ? WHERE id = ?;', (status_id, id))
         await cx.commit()
 
 
-async def get_queue_count():
+async def get_queue_len():
+    result = 0
     async with aiosqlite.connect(DB) as cx:
-        async with cx.execute(f'SELECT COUNT(id) FROM {DB_TABLE_PROCESS};') as cu:
+        async with cx.execute(f'SELECT COUNT(id) FROM {DB_TABLE_PROCESS} WHERE status_id in (0, 1, 2, 3, 4);') as cu:
             row = await cu.fetchone()
-    return row[0]
+    if row is not None:
+        result = row[0]
+    return result
 
 
 async def get_queue():
@@ -36,7 +39,7 @@ async def url_exist(url: str) -> bool | int:
     return row[0]
 
 
-async def add_new_link(url: str, from_id: int, message_id: int) -> int:
+async def add_link_to_queue(url: str, from_id: int, message_id: int) -> int:
     async with aiosqlite.connect(DB) as cx:
         await cx.execute(f'INSERT INTO {DB_TABLE_PROCESS} (link_page, from_id, message_id, status_id) VALUES (?,?,?,?);', 
                          (url, from_id, message_id, 0))
@@ -62,10 +65,23 @@ async def get_all_in_process():
 
 async def get_one_in_process():
     result = None
-    async with aiosqlite.connect(DB) as cx:
-        async with cx.execute(f'SELECT id, link_page, status_id, from_id, message_id FROM {DB_TABLE_PROCESS} WHERE status_id < 5 LIMIT 1;') as cu:
-            result = list()
-            result.append(await cu.fetchone())
+    try:
+        async with aiosqlite.connect(DB) as cx:
+            async with cx.execute(
+                    f'''
+                    SELECT 
+                        id
+                        , link_page
+                        , status_id
+                        , from_id
+                        , message_id 
+                    FROM {DB_TABLE_PROCESS} 
+                    WHERE status_id in (0, 1, 2, 3, 4) 
+                    LIMIT 1;'''
+                ) as cu:
+                result = await cu.fetchone()
+    except Exception as e:
+        print(e)
     return result
     
 
