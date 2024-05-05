@@ -7,10 +7,10 @@ DB_PATH="./db"
 FILE_PATH="./files"
 
 docker compose -f $COMPOSE_FILE down
-mkdir $DB_PATH
-mkdir $FILE_PATH
-chmod 666 $DB_PATH
-chmod 666 $FILE_PATH
+# mkdir $DB_PATH
+# mkdir $FILE_PATH
+# chmod 744 $DB_PATH
+# chmod 744 $FILE_PATH
 docker build -t pvd_bot_image -f $DOCKER_FILE .
 docker compose -f $COMPOSE_FILE build
 docker compose -f $COMPOSE_FILE up -d

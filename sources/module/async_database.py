@@ -9,7 +9,7 @@ DB = env_db_filename()
 
 async def set_status(id, status_id):
     async with aiosqlite.connect(DB) as cx:
-        await cx.execute('UPDATE {DB_TABLE_PROCESS} SET status_id = ? WHERE id = ?;', (status_id, id))
+        await cx.execute(f'UPDATE {DB_TABLE_PROCESS} SET status_id = ? WHERE id = ?;', (status_id, id))
         await cx.commit()
 
 
@@ -65,20 +65,23 @@ async def get_all_in_process():
 
 async def get_one_in_process():
     result = None
-    async with aiosqlite.connect(DB) as cx:
-        async with cx.execute(
-                f'''
-                SELECT 
-                    id
-                    , link_page
-                    , status_id
-                    , from_id
-                    , message_id 
-                FROM {DB_TABLE_PROCESS} 
-                WHERE status_id in (0, 1, 2, 3, 4) 
-                LIMIT 1;'''
-            ) as cu:
-            result = await cu.fetchone()
+    try:
+        async with aiosqlite.connect(DB) as cx:
+            async with cx.execute(
+                    f'''
+                    SELECT 
+                        id
+                        , link_page
+                        , status_id
+                        , from_id
+                        , message_id 
+                    FROM {DB_TABLE_PROCESS} 
+                    WHERE status_id in (0, 1, 2, 3, 4) 
+                    LIMIT 1;'''
+                ) as cu:
+                result = await cu.fetchone()
+    except Exception as e:
+        print(e)
     return result
     
 

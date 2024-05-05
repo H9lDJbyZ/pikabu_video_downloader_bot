@@ -49,7 +49,7 @@ async def download():
         curl(html_file, link_page)
 
         await log('Поиск ссылки на видео')
-        video = find_video_link(html_file)
+        video = await find_video_link(html_file)
         if not video:
             await set_status(id, 7)
             return
