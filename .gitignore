@@ -1,9 +1,9 @@
-.venv
+**/__pycache__
+**/.venv
+**/*.pyc
+**/.vscode
+**/*.log
 .env
-.vscode
 db
 files
-*.pyc
-*.log
 tmp
-__pycache__
