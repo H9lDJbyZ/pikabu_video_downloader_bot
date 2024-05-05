@@ -29,6 +29,9 @@ def curl(out, link):
         c = pycurl.Curl()
         c.setopt(c.URL, link)
         c.setopt(c.WRITEDATA, f)
+        c.setopt(c.CAPATH, '/etc/ssl/certs')
+        c.setopt(c.CAINFO, '/etc/ssl/certs/ca-certificates.crt')
+        
         c.perform()
         c.close()
 

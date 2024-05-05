@@ -6,5 +6,6 @@ RUN python -m pip install --upgrade pip
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
 RUN python -m pip install --compile --global-option="--with-openssl" --no-cache-dir pycurl
+RUN update-ca-certificates
 WORKDIR /app
 COPY ./sources /app
