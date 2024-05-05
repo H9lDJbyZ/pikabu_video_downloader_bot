@@ -8,4 +8,3 @@ RUN python -m pip install -r requirements.txt
 RUN python -m pip install --compile --global-option="--with-openssl" --no-cache-dir pycurl
 WORKDIR /app
 COPY ./sources /app
-# CMD ["python", "downloader.py"]
