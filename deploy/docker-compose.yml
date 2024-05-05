@@ -10,7 +10,7 @@ services:
       - "./db:/app/db"
       - "./files:/app/files"
     build: 
-      context: .
+      context: ..
       # dockerfile: bot.Dockerfile
       dockerfile_inline: |
         FROM pvd_bot_image:latest
@@ -27,7 +27,7 @@ services:
       - "./db:/app/db"
       - "./files:/app/files"
     build: 
-      context: .
+      context: ..
       # dockerfile: downloader.Dockerfile
       dockerfile_inline: |
         FROM pvd_bot_image:latest
