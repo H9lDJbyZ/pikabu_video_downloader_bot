@@ -1,7 +1,5 @@
 # version: '3.9'
-
 services:
-  
   bot:
     image: pvd_bot:latest
     env_file:
@@ -18,7 +16,6 @@ services:
       # tags:
       #   - "pvd_bot:latest"
     restart: always
-  
   downloader:
     image: pvd_downloader:latest
     env_file:
