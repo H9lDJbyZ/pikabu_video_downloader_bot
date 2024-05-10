@@ -5,8 +5,8 @@ services:
     env_file:
       - .env
     volumes:
-      - "./db:/app/db"
-      - "./files:/app/files"
+      - "../db:/app/db"
+      - "../files:/app/files"
     build: 
       context: .
       # dockerfile: bot.Dockerfile
@@ -21,8 +21,8 @@ services:
     env_file:
       - .env
     volumes:
-      - "./db:/app/db"
-      - "./files:/app/files"
+      - "../db:/app/db"
+      - "../files:/app/files"
     build: 
       context: .
       # dockerfile: downloader.Dockerfile
