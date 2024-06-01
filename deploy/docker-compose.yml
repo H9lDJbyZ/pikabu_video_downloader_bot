@@ -3,7 +3,7 @@ services:
   bot:
     image: pvd_bot:latest
     env_file:
-      - .env
+      - ../.env
     volumes:
       - "../db:/app/db"
       - "../files:/app/files"
@@ -19,7 +19,7 @@ services:
   downloader:
     image: pvd_downloader:latest
     env_file:
-      - .env
+      - ../.env
     volumes:
       - "../db:/app/db"
       - "../files:/app/files"
