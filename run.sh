@@ -13,6 +13,6 @@ docker compose -f $COMPOSE_FILE down
 # chmod 744 $FILE_PATH
 docker build -t pvd_bot_image -f $DOCKER_FILE .
 # docker build -t pvd_bot_image -f https://github.com/H9lDJbyZ/pikabu_video_downloader_bot.git#master:deploy .
-docker compose -f $COMPOSE_FILE build
+# docker compose -f $COMPOSE_FILE build
 docker compose -f $COMPOSE_FILE up -d
 docker ps

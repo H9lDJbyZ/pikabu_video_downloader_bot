@@ -13,8 +13,8 @@ services:
       dockerfile_inline: |
         FROM pvd_bot_image:latest
         CMD ["python", "bot.py"]
-      # tags:
-      #   - "pvd_bot:latest"
+      tags:
+        - "pvd_bot:latest"
     restart: always
   downloader:
     image: pvd_downloader:latest
@@ -24,11 +24,11 @@ services:
       - "../db:/app/db"
       - "../files:/app/files"
     build: 
-      context: .
+      context: ..
       # dockerfile: downloader.Dockerfile
       dockerfile_inline: |
         FROM pvd_bot_image:latest
         CMD ["python", "downloader.py"]
-      # tags:
-      #   - "pvd_downloader:latest"
+      tags:
+        - "pvd_downloader:latest"
     restart: always
