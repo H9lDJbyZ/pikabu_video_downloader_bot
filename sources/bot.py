@@ -7,10 +7,11 @@ from aiogram import F
 # from aiogram.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted, UserDeactivated
 from aiogram.exceptions import TelegramAPIError, TelegramNotFound, TelegramBadRequest
 from aiogram.types import FSInputFile, BotName
-from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id
+from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id, delete_from_files
 from module.log import log
 from module.env import env_ch_id, env_bot_token
 import cv2
+from random import random
 
 logging.basicConfig(level=logging.INFO)
 
@@ -75,12 +76,23 @@ async def any_text(message: types.Message):
 
 async def send_from_channel(file_id, from_id):
     message_id = await get_channel_message_id(file_id)
-    
-    await bot.forward_message(
-                chat_id=from_id,
-                from_chat_id=CH_ID,
-                message_id=message_id
+    try:
+        await bot.forward_message(
+                    chat_id=from_id,
+                    from_chat_id=CH_ID,
+                    message_id=message_id
+                )
+    except TelegramBadRequest as e:
+        if e.message == 'Bad Request: MESSAGE_ID_INVALID': # не найдено на канале
+            bot_message = await bot.send_message(
+                from_id, 'oops, i did it again'
             )
+            # Удалить из бд
+            url = await delete_from_files(file_id)
+            # Добавить в очередь на загрузку
+            if url is not None:
+                await add_link_to_queue(url, from_id, bot_message.message_id)
+            
 
 
 async def update_status():
@@ -90,15 +102,18 @@ async def update_status():
     
     process_id, link_page, status_id, from_id, message_id = row
     
-    print(process_id)
+    await log(f'В работе: {process_id}, статус {status_id}...')
     try:
         await bot.edit_message_text(
-            text=f'{link_page}\nСтатус: {status_id}\nОчередь: {await get_queue_len()}',
+            text=f'{link_page}\nСтатус: {status_id}\nОчередь: {await get_queue_len()}\n{random()}',
             chat_id=from_id,
             message_id=message_id
         )
     except TelegramBadRequest as e:
-        pass
+        print(e)
+        if e.message == 'Bad Request: message to edit not found':
+            await set_status(process_id, 13)
+        return
 
     if status_id == 3:
         await set_status(process_id, 4)

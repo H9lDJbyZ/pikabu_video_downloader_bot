@@ -96,9 +96,24 @@ async def get_file_id(ch_id, link_page, process_id):
             await cx.commit()
             async with cx.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,)) as cu:
                 row = await cu.fetchone()
+            if row is not None:
+                result = row[0]
     except Exception as e:
         print(e)
-    if row is not None:
-        result = row[0]
     return result
     
+
+async def delete_from_files(file_id) -> str | None:
+    result = None
+    try:
+        async with aiosqlite.connect(DB) as cx:
+            async with cx.execute(f'SELECT link_page FROM {DB_TABLE_FILES} WHERE id = ?;', (file_id,)) as cu:
+                row = await cu.fetchone()
+            if row is not None:
+                result = row[0]   
+            await cx.execute(f'DELETE FROM {DB_TABLE_FILES} WHERE id = ?;', (file_id,))
+            await cx.commit()
+            # result = True
+    except Exception as e:
+        print(e)
+    return result
