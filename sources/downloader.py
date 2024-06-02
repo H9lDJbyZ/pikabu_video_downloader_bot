@@ -15,9 +15,17 @@ async def find_video_link(filename):
         page = str(f.read())
     try:
         ind_div = page.find('<div class="player"')
+        if ind_div == -1:
+            return False
         ind_attr = page.find('data-source=', ind_div)
+        if ind_attr == -1:
+            return False
         ind_1q = page.find('"', ind_attr) + 1
+        if ind_1q == -1:
+            return False
         ind_2q = page.find('"', ind_1q)
+        if ind_2q == -1:
+            return False
         res = page[ind_1q:ind_2q]+'.mp4'
     except:
         return False
