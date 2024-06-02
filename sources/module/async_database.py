@@ -30,13 +30,14 @@ async def get_queue():
     return result
 
 
-async def url_exist(url: str) -> bool | int:
+async def url_exist(url: str) -> None | int:
+    result = None
     async with aiosqlite.connect(DB) as cx:
         async with cx.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (url,)) as cu:
             row = await cu.fetchone()
-    if row is None:
-        return False
-    return row[0]
+    if row is not None:
+        result = row[0]
+    return result
 
 
 async def add_link_to_queue(url: str, from_id: int, message_id: int) -> int:
@@ -47,12 +48,13 @@ async def add_link_to_queue(url: str, from_id: int, message_id: int) -> int:
 
 
 async def get_channel_message_id(file_id):
+    result = None
     async with aiosqlite.connect(DB) as cx:
         async with cx.execute(f'SELECT message_id FROM {DB_TABLE_FILES} WHERE id = ?;', (file_id,)) as cu:
             row = await cu.fetchone()
-    if row is None:
-        return None
-    return row[0]
+    if row is not None:
+        result = row[0]
+    return result
 
 
 async def get_all_in_process():
@@ -86,12 +88,17 @@ async def get_one_in_process():
     
 
 async def get_file_id(ch_id, link_page, process_id):
-    async with aiosqlite.connect(DB) as cx:
-        await cx.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
-        await cx.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
-        await cx.commit()
-        async with cx.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,)) as cu:
-            row = await cu.fetchone()
-        file_id = row[0]
-        return file_id
+    result = None
+    try:
+        async with aiosqlite.connect(DB) as cx:
+            await cx.execute(f'INSERT INTO {DB_TABLE_FILES} (message_id, link_page) VALUES (?,?);', (ch_id, link_page,))
+            await cx.execute(f'DELETE FROM {DB_TABLE_PROCESS} WHERE id = ?;', (process_id,))
+            await cx.commit()
+            async with cx.execute(f'SELECT id FROM {DB_TABLE_FILES} WHERE link_page = ?;', (link_page,)) as cu:
+                row = await cu.fetchone()
+    except Exception as e:
+        print(e)
+    if row is not None:
+        result = row[0]
+    return result
     

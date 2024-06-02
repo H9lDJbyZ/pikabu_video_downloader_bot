@@ -41,14 +41,8 @@ async def cmd_start(message: types.Message):
     await message.reply(f'Пришли ТОЛЬКО ссылку на пост Пикабу с видео\nОчередь: {await get_queue_len()}')
 
 
-# def is_pikabu(url: str) -> bool:
-#     return url.startswith('https://pikabu.ru/story/')
-
-
 @dp.message(F.text)
 async def any_text(message: types.Message):
-    # url = message.text
-    
     if message.entities is None: 
         return
     if message.entities[0].type != 'url':
@@ -70,12 +64,10 @@ async def any_text(message: types.Message):
     from_id = message.from_user.id
     
     file_id = await url_exist(url)
-    if not file_id:
-        # await bot_message.edit_text('Ранее не скачивалось')
+    if file_id is None:
         await add_link_to_queue(url, from_id, bot_message.message_id)
         await bot_message.edit_text(f'Добавлено в очередь\nВ очереди {await get_queue_len()}, придётся немного подождать')
     else:
-        # await bot_message.edit_text('Ранее скачивалось')
         await bot_message.delete()
         await send_from_channel(file_id, from_id)
             
@@ -83,6 +75,7 @@ async def any_text(message: types.Message):
 
 async def send_from_channel(file_id, from_id):
     message_id = await get_channel_message_id(file_id)
+    
     await bot.forward_message(
                 chat_id=from_id,
                 from_chat_id=CH_ID,
