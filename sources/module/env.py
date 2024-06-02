@@ -13,3 +13,7 @@ def env_ch_id():
 
 def env_bot_token():
     return environ.get('BOT_TOKEN')
+
+
+def env_bot_version():
+    return environ.get('BOT_VERSION')

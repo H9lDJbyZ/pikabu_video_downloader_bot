@@ -9,7 +9,7 @@ from aiogram.exceptions import TelegramAPIError, TelegramNotFound, TelegramBadRe
 from aiogram.types import FSInputFile, BotName
 from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id, delete_from_files
 from module.log import log
-from module.env import env_ch_id, env_bot_token
+from module.env import env_ch_id, env_bot_token, env_bot_version
 import cv2
 from random import random
 
@@ -173,6 +173,7 @@ async def scheduler():
 
 
 async def start_bot():
+    
     await dp.start_polling(bot)
 
 
@@ -183,4 +184,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    print(f'env_bot_version {env_bot_version()}')
     asyncio.run(main())
