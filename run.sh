@@ -7,6 +7,9 @@ DB_PATH="./db"
 FILE_PATH="./files"
 
 docker compose -f $COMPOSE_FILE down
+
+# rm -f files/*
+
 # mkdir $DB_PATH
 # mkdir $FILE_PATH
 # chmod 744 $DB_PATH
