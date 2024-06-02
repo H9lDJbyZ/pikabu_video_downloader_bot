@@ -76,7 +76,7 @@ async def get_one_in_process():
                         , from_id
                         , message_id 
                     FROM {DB_TABLE_PROCESS} 
-                    WHERE status_id in (0, 1, 2, 3, 4) 
+                    WHERE status_id in (0, 1, 2, 3) 
                     LIMIT 1;'''
                 ) as cu:
                 result = await cu.fetchone()

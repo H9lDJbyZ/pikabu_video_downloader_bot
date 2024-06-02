@@ -64,7 +64,7 @@ async def any_text(message: types.Message):
     if pos_question != -1:
         url = url[:pos_question]
     
-    await message.answer(url)
+    # await message.answer(url)
     bot_message = await message.answer('Работаем...')
     
     from_id = message.from_user.id
