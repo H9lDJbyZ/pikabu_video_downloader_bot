@@ -4,7 +4,7 @@ from time import sleep
 from module.async_database import get_queue, set_status
 from module.log import log
 import pycurl
-from sources.module.env import env_bot_version
+from module.env import env_bot_version
 
 
 async def find_video_link(filename):
