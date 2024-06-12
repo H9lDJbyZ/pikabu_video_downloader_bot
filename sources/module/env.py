@@ -16,5 +16,11 @@ def env_bot_token():
 
 
 def env_bot_version():
-    return environ.get('BOT_VERSION')
+    result = environ.get('BOT_VERSION')
+    if result is None:
+        raise RuntimeError("env BOT_VERSION is None")
+    return result
 
+
+def env_bot_filespath():
+    return environ.get('FILES_PATH')

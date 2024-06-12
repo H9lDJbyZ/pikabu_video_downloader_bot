@@ -4,7 +4,10 @@ from time import sleep
 from module.async_database import get_queue, set_status
 from module.log import log
 import pycurl
-from module.env import env_bot_version
+from module.env import env_bot_version, env_bot_filespath
+
+
+
 
 
 async def find_video_link(filename):
@@ -57,7 +60,7 @@ async def download():
 
         await log(f'Скачиваю страницу {link_page}...')
         await set_status(id, 1)
-        html_file = f'./files/{id}.html'
+        html_file = f'{FILES_PATH}/{id}.html'
         try:
             curl(html_file, link_page)
         except Exception as e:
@@ -73,7 +76,7 @@ async def download():
         
         await log('Скачиваю видео...')
         await set_status(id, 2)
-        video_file = f'./files/{id}.mp4'
+        video_file = f'{FILES_PATH}/{id}.mp4'
         try:
             curl(video_file, video)
         except Exception as e:
@@ -93,4 +96,5 @@ async def scheduler():
 
 if __name__ == '__main__':
     print(f'env_bot_version {env_bot_version()}')
+    FILES_PATH = env_bot_filespath()
     asyncio.run(scheduler())

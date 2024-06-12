@@ -117,3 +117,19 @@ async def delete_from_files(file_id) -> str | None:
     except Exception as e:
         print(e)
     return result
+
+
+async def db_info() -> str | None:
+    result = 'empty'
+    try:
+        async with aiosqlite.connect(DB) as cx:
+            async with cx.execute(f'SELECT count(id), status_id FROM {DB_TABLE_PROCESS} GROUP BY status_id ;') as cu:
+                rows = await cu.fetchall()
+        if rows is not None:
+            result = ''
+            for row in rows:
+                count, status = row
+                result += f'status: {status} = {count}\n'
+    except Exception as e:
+        print(e)
+    return result

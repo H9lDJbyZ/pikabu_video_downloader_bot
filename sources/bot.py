@@ -7,9 +7,9 @@ from aiogram import F
 # from aiogram.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted, UserDeactivated
 from aiogram.exceptions import TelegramAPIError, TelegramNotFound, TelegramBadRequest
 from aiogram.types import FSInputFile, BotName
-from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id, delete_from_files
+from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id, delete_from_files, db_info
 from module.log import log
-from module.env import env_ch_id, env_bot_token, env_bot_version
+from module.env import env_ch_id, env_bot_token, env_bot_version, env_bot_filespath
 import cv2
 from random import random
 
@@ -29,8 +29,8 @@ status = {
 
 
 def delete_files(id):
-    fn_html = f'./files/{id}.html'
-    fn_mp4 = f'./files/{id}.mp4'
+    fn_html = f'{FILES_PATH}/{id}.html'
+    fn_mp4 = f'{FILES_PATH}/{id}.mp4'
     if os.path.exists(fn_html):
         os.remove(fn_html)
     if os.path.exists(fn_mp4):        
@@ -40,6 +40,16 @@ def delete_files(id):
 @dp.message(Command('start'))
 async def cmd_start(message: types.Message):
     await message.reply(f'Пришли ТОЛЬКО ссылку на пост Пикабу с видео\nОчередь: {await get_queue_len()}')
+
+
+@dp.message(Command('info'))
+async def cmd_info(message: types.Message):
+    
+    await message.reply(
+        f'''version: {env_bot_version()}\n
+        {await db_info()}\n
+        '''
+    )
 
 
 @dp.message(F.text)
@@ -117,7 +127,7 @@ async def update_status():
 
     if status_id == 3:
         await set_status(process_id, 4)
-        filename = f'./files/{process_id}.mp4'
+        filename = f'{FILES_PATH}/{process_id}.mp4'
         if not os.path.exists(filename):
             await log(f'{filename} не найден', 'WARN')
             await set_status(process_id, 7)
@@ -185,4 +195,5 @@ async def main():
 
 if __name__ == "__main__":
     print(f'env_bot_version {env_bot_version()}')
+    FILES_PATH = env_bot_filespath()
     asyncio.run(main())
