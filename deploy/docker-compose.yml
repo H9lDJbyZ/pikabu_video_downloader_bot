@@ -1,34 +1,33 @@
 # version: '3.9'
 services:
   bot:
-    image: pvd_bot:latest
+    image: pvd_bot_image:latest
     env_file:
       - ../.env
+    environment:
+      - DATABASE_FILE=/db/data.db
+      - FILES_PATH=/files
     volumes:
-      - "../db:/app/db"
-      - "../files:/app/files"
-    build: 
-      context: .
-      # dockerfile: bot.Dockerfile
-      dockerfile_inline: |
-        FROM pvd_bot_image:latest
-        CMD ["python", "bot.py"]
-      tags:
-        - "pvd_bot:latest"
+      - "../sources:/app"
+      - "../db:/db"
+      - "../files:/files"
+    command: "python bot.py"
     restart: always
   downloader:
-    image: pvd_downloader:latest
+    image: pvd_bot_image:latest
     env_file:
       - ../.env
+    environment:
+      - DATABASE_FILE=/db/data.db
+      - FILES_PATH=/files
     volumes:
-      - "../db:/app/db"
-      - "../files:/app/files"
-    build: 
-      context: ..
-      # dockerfile: downloader.Dockerfile
-      dockerfile_inline: |
-        FROM pvd_bot_image:latest
-        CMD ["python", "downloader.py"]
-      tags:
-        - "pvd_downloader:latest"
+      - "../sources:/app"
+      - "../db:/db"
+      - "../files:/files"
+    command: "python downloader.py"
     restart: always
+
+# volumes:
+#   sources: "../sources"
+#   db: "../db"
+#   files: "../files"

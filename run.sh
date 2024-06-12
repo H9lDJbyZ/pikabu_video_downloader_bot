@@ -6,6 +6,8 @@ COMPOSE_FILE="${DEPLOY_PATH}/docker-compose.yml"
 DB_PATH="./db"
 FILE_PATH="./files"
 
+# docker volume create 
+
 docker compose -f $COMPOSE_FILE down
 docker rmi pvd_bot pvd_downloader
 # rm -f files/*

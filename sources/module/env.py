@@ -17,3 +17,4 @@ def env_bot_token():
 
 def env_bot_version():
     return environ.get('BOT_VERSION')
+
