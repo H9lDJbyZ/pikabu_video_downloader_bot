@@ -7,9 +7,6 @@ import pycurl
 from module.env import env_bot_version, env_bot_filespath
 
 
-
-
-
 async def find_video_link(filename):
     await log(f'find_video_link - {filename}')
     if not os.path.exists(filename):
