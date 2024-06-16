@@ -1,4 +1,5 @@
 #!/bin/bash
+
 DEPLOY_PATH="./deploy"
 DOCKER_FILE="${DEPLOY_PATH}/Dockerfile"
 COMPOSE_FILE="${DEPLOY_PATH}/docker-compose.yml"
@@ -9,9 +10,9 @@ FILE_PATH="./files"
 # docker volume create 
 
 docker compose -f $COMPOSE_FILE down
-docker rmi pvd_bot pvd_downloader
+cp ./db/data.db ./db/data.db.backup_$(date '+%Y%m%d_%H%M%S')
+# docker rmi pvd_bot pvd_downloader
 # rm -f files/*
-
 # mkdir $DB_PATH
 # mkdir $FILE_PATH
 # chmod 744 $DB_PATH
