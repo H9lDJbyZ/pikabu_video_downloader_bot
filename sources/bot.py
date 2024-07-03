@@ -7,10 +7,11 @@ from aiogram import F
 # from aiogram.exceptions import MessageNotModified, MessageToEditNotFound, MessageToDeleteNotFound, BotBlocked, MessageCantBeDeleted, UserDeactivated
 from aiogram.exceptions import TelegramAPIError, TelegramNotFound, TelegramBadRequest
 from aiogram.types import FSInputFile, BotName
-from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id
+from module.async_database import get_all_in_process, get_file_id, get_one_in_process, get_queue_len, set_status, url_exist, add_link_to_queue, get_channel_message_id, delete_from_files, db_info
 from module.log import log
-from module.env import env_ch_id, env_bot_token
+from module.env import env_ch_id, env_bot_token, env_bot_version, env_bot_filespath
 import cv2
+from random import random
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,8 +29,8 @@ status = {
 
 
 def delete_files(id):
-    fn_html = f'./files/{id}.html'
-    fn_mp4 = f'./files/{id}.mp4'
+    fn_html = f'{FILES_PATH}/{id}.html'
+    fn_mp4 = f'{FILES_PATH}/{id}.mp4'
     if os.path.exists(fn_html):
         os.remove(fn_html)
     if os.path.exists(fn_mp4):        
@@ -41,14 +42,18 @@ async def cmd_start(message: types.Message):
     await message.reply(f'Пришли ТОЛЬКО ссылку на пост Пикабу с видео\nОчередь: {await get_queue_len()}')
 
 
-# def is_pikabu(url: str) -> bool:
-#     return url.startswith('https://pikabu.ru/story/')
+@dp.message(Command('info'))
+async def cmd_info(message: types.Message):
+    
+    await message.reply(
+        f'''version: {env_bot_version()}\n
+        {await db_info()}\n
+        '''
+    )
 
 
 @dp.message(F.text)
 async def any_text(message: types.Message):
-    # url = message.text
-    
     if message.entities is None: 
         return
     if message.entities[0].type != 'url':
@@ -64,18 +69,16 @@ async def any_text(message: types.Message):
     if pos_question != -1:
         url = url[:pos_question]
     
-    await message.answer(url)
+    # await message.answer(url)
     bot_message = await message.answer('Работаем...')
     
     from_id = message.from_user.id
     
     file_id = await url_exist(url)
-    if not file_id:
-        # await bot_message.edit_text('Ранее не скачивалось')
+    if file_id is None:
         await add_link_to_queue(url, from_id, bot_message.message_id)
         await bot_message.edit_text(f'Добавлено в очередь\nВ очереди {await get_queue_len()}, придётся немного подождать')
     else:
-        # await bot_message.edit_text('Ранее скачивалось')
         await bot_message.delete()
         await send_from_channel(file_id, from_id)
             
@@ -83,11 +86,23 @@ async def any_text(message: types.Message):
 
 async def send_from_channel(file_id, from_id):
     message_id = await get_channel_message_id(file_id)
-    await bot.forward_message(
-                chat_id=from_id,
-                from_chat_id=CH_ID,
-                message_id=message_id
+    try:
+        await bot.forward_message(
+                    chat_id=from_id,
+                    from_chat_id=CH_ID,
+                    message_id=message_id
+                )
+    except TelegramBadRequest as e:
+        if e.message == 'Bad Request: MESSAGE_ID_INVALID': # не найдено на канале
+            bot_message = await bot.send_message(
+                from_id, 'oops, i did it again'
             )
+            # Удалить из бд
+            url = await delete_from_files(file_id)
+            # Добавить в очередь на загрузку
+            if url is not None:
+                await add_link_to_queue(url, from_id, bot_message.message_id)
+            
 
 
 async def update_status():
@@ -97,19 +112,22 @@ async def update_status():
     
     process_id, link_page, status_id, from_id, message_id = row
     
-    print(process_id)
+    await log(f'В работе: {process_id}, статус {status_id}...')
     try:
         await bot.edit_message_text(
-            text=f'{link_page}\nСтатус: {status_id}\nОчередь: {await get_queue_len()}',
+            text=f'{link_page}\nСтатус: {status_id}\nОчередь: {await get_queue_len()}\n{random()}',
             chat_id=from_id,
             message_id=message_id
         )
     except TelegramBadRequest as e:
-        pass
+        print(e)
+        if e.message == 'Bad Request: message to edit not found':
+            await set_status(process_id, 13)
+        return
 
     if status_id == 3:
         await set_status(process_id, 4)
-        filename = f'./files/{process_id}.mp4'
+        filename = f'{FILES_PATH}/{process_id}.mp4'
         if not os.path.exists(filename):
             await log(f'{filename} не найден', 'WARN')
             await set_status(process_id, 7)
@@ -165,6 +183,7 @@ async def scheduler():
 
 
 async def start_bot():
+    
     await dp.start_polling(bot)
 
 
@@ -175,4 +194,6 @@ async def main():
 
 
 if __name__ == "__main__":
+    print(f'env_bot_version {env_bot_version()}')
+    FILES_PATH = env_bot_filespath()
     asyncio.run(main())

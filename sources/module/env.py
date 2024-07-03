@@ -13,3 +13,14 @@ def env_ch_id():
 
 def env_bot_token():
     return environ.get('BOT_TOKEN')
+
+
+def env_bot_version():
+    result = environ.get('BOT_VERSION')
+    if result is None:
+        raise RuntimeError("env BOT_VERSION is None")
+    return result
+
+
+def env_bot_filespath():
+    return environ.get('FILES_PATH')
