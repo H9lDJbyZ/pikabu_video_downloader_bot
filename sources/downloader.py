@@ -11,26 +11,39 @@ from module.env import env_bot_version, env_bot_filespath
 
 
 async def find_video_link(filename):
-    await log(f'find_video_link - {filename}')
+    await log(f'find_video_link in file {filename}')
     if not os.path.exists(filename):
         await log(f'{filename} not found', 'WARN')
         return False
     with open(filename, 'br') as f:
         page = str(f.read())
     try:
-        ind_div = page.find('<div class="player"')
-        if ind_div == -1:
+        # ind_div = page.find('<div class="player"')
+        # if ind_div == -1:
+        #     return False
+        # ind_attr = page.find('data-source=', ind_div)
+        # if ind_attr == -1:
+        #     return False
+        # ind_1q = page.find('"', ind_attr) + 1
+        # if ind_1q == -1:
+        #     return False
+        # ind_2q = page.find('"', ind_1q)
+        # if ind_2q == -1:
+        #     return False
+        # res = page[ind_1q:ind_2q]+'.mp4'
+        ind_type = page.find('type="video/mp4"')
+        if ind_type == -1:
             return False
-        ind_attr = page.find('data-source=', ind_div)
-        if ind_attr == -1:
+        ind_https = page.rfind('https', ind_type)
+        if ind_https == -1:
             return False
-        ind_1q = page.find('"', ind_attr) + 1
-        if ind_1q == -1:
+        ind_mp4 = page.find('.mp4', ind_https)
+        if ind_mp4 == -1:
             return False
-        ind_2q = page.find('"', ind_1q)
-        if ind_2q == -1:
-            return False
-        res = page[ind_1q:ind_2q]+'.mp4'
+        # ind_2q = page.find('"', ind_mp4)
+        # if ind_2q == -1:
+        #     return False
+        res = page[ind_https:ind_mp4 + 4]
     except:
         return False
     return res
@@ -70,6 +83,7 @@ async def download():
 
         await log('Поиск ссылки на видео...')
         video = await find_video_link(html_file)
+        await log (f'Ссылка на видео: {video}')
         if not video:
             await set_status(id, 7)
             return
